@@ -1,153 +1,182 @@
-let profitData = JSON.parse(localStorage.getItem("profitData")) || [];
-let editingIndex = null;
+// Get DOM elements
+const profitForm = document.getElementById('profitForm');
+const jobNoInput = document.getElementById('jobNo');
+const customerInput = document.getElementById('customer');
+const shipmentInput = document.getElementById('shipment');
+const chargeInput = document.getElementById('charge');
+const actualCostInput = document.getElementById('actualCost');
+const statusInput = document.getElementById('status');
+const profitBody = document.getElementById('profitBody');
+const searchInput = document.getElementById('searchInput');
+const profitChartCanvas = document.getElementById('profitChart');
 
-const jobNoInput = document.getElementById("jobNo");
-const customerInput = document.getElementById("customer");
-const shipmentInput = document.getElementById("shipment");
-const chargeInput = document.getElementById("charge");
-const actualCostInput = document.getElementById("actualCost");
-const statusInput = document.getElementById("status");
+// Initialize an empty array for profit records
+let profitData = JSON.parse(localStorage.getItem('profitData')) || [];
 
-const profitBody = document.getElementById("profitBody");
-const searchInput = document.getElementById("searchInput");
-const exportBtn = document.getElementById("exportBtn");
-const profitChart = document.getElementById("profitChart");
+// Render the profit table and chart
+function renderProfitTable() {
+  profitBody.innerHTML = '';
+  profitData.forEach((item, index) => {
+    const profit = item.charge - item.actualCost;
+    const margin = ((profit / item.charge) * 100).toFixed(2);
 
-document.getElementById("addRecordBtn").addEventListener("click", () => {
-  const jobNo = jobNoInput.value.trim();
-  const customer = customerInput.value.trim();
-  const shipment = shipmentInput.value.trim();
-  const charge = parseFloat(chargeInput.value);
-  const actualCost = parseFloat(actualCostInput.value);
-  const status = statusInput.value.trim();
-  const profit = charge - actualCost;
-  const margin = charge > 0 ? ((profit / charge) * 100).toFixed(2) + "%" : "0%";
-
-  if (!jobNo || !customer || isNaN(charge) || isNaN(actualCost)) {
-    alert("Please fill in all fields correctly.");
-    return;
-  }
-
-  const newRecord = { jobNo, customer, shipment, charge, actualCost, profit, margin, status };
-
-  if (editingIndex !== null) {
-    profitData[editingIndex] = newRecord;
-    editingIndex = null;
-  } else {
-    profitData.push(newRecord);
-  }
-
-  localStorage.setItem("profitData", JSON.stringify(profitData));
-  resetForm();
-  renderProfitTable(profitData);
-  updateChart(profitData);
-  updateSummary(profitData);
-});
-
-function renderProfitTable(data) {
-  profitBody.innerHTML = "";
-  data.forEach((item, index) => {
     profitBody.innerHTML += `
-      <tr class="border-b">
-        <td class="p-2">${item.jobNo}</td>
-        <td class="p-2">${item.customer}</td>
-        <td class="p-2">${item.shipment}</td>
-        <td class="p-2">${item.charge}</td>
-        <td class="p-2">${item.actualCost}</td>
-        <td class="p-2">${item.profit}</td>
-        <td class="p-2">${item.margin}</td>
-        <td class="p-2">${item.status}</td>
-        <td class="p-2 space-x-2">
+      <tr>
+        <td class="p-2 border">${item.jobNo}</td>
+        <td class="p-2 border">${item.customer}</td>
+        <td class="p-2 border">${item.shipment}</td>
+        <td class="p-2 border">${item.charge}</td>
+        <td class="p-2 border">${item.actualCost}</td>
+        <td class="p-2 border">${profit.toFixed(2)}</td>
+        <td class="p-2 border">${margin}%</td>
+        <td class="p-2 border">${item.status}</td>
+        <td class="p-2 border">
           <button onclick="editRecord(${index})" class="text-blue-600">Edit</button>
           <button onclick="deleteRecord(${index})" class="text-red-600">Delete</button>
         </td>
-      </tr>`;
+      </tr>
+    `;
   });
+  renderProfitChart();
 }
 
+// Handle Add/Edit form submission
+profitForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+
+  const jobNo = jobNoInput.value.trim();
+  const customer = customerInput.value.trim();
+  const shipment = shipmentInput.value.trim();
+  const charge = parseFloat(chargeInput.value.trim());
+  const actualCost = parseFloat(actualCostInput.value.trim());
+  const status = statusInput.value.trim();
+
+  if (!jobNo || !customer || !charge || !actualCost) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+
+  const newRecord = { jobNo, customer, shipment, charge, actualCost, status };
+
+  // Add to existing data or edit existing record
+  const recordIndex = profitData.findIndex((item) => item.jobNo === jobNo);
+  if (recordIndex !== -1) {
+    profitData[recordIndex] = newRecord;  // Edit record
+  } else {
+    profitData.push(newRecord);  // Add new record
+  }
+
+  localStorage.setItem('profitData', JSON.stringify(profitData));
+  clearForm();
+  renderProfitTable();
+});
+
+// Edit record function
 function editRecord(index) {
-  const item = profitData[index];
-  jobNoInput.value = item.jobNo;
-  customerInput.value = item.customer;
-  shipmentInput.value = item.shipment;
-  chargeInput.value = item.charge;
-  actualCostInput.value = item.actualCost;
-  statusInput.value = item.status;
-  editingIndex = index;
+  const record = profitData[index];
+  jobNoInput.value = record.jobNo;
+  customerInput.value = record.customer;
+  shipmentInput.value = record.shipment;
+  chargeInput.value = record.charge;
+  actualCostInput.value = record.actualCost;
+  statusInput.value = record.status;
 }
 
+// Delete record function
 function deleteRecord(index) {
-  if (confirm("Delete this record?")) {
+  if (confirm('Are you sure you want to delete this record?')) {
     profitData.splice(index, 1);
-    localStorage.setItem("profitData", JSON.stringify(profitData));
-    renderProfitTable(profitData);
-    updateChart(profitData);
-    updateSummary(profitData);
+    localStorage.setItem('profitData', JSON.stringify(profitData));
+    renderProfitTable();
   }
 }
 
-function resetForm() {
-  jobNoInput.value = "";
-  customerInput.value = "";
-  shipmentInput.value = "";
-  chargeInput.value = "";
-  actualCostInput.value = "";
-  statusInput.value = "";
+// Clear the form after submitting
+function clearForm() {
+  jobNoInput.value = '';
+  customerInput.value = '';
+  shipmentInput.value = '';
+  chargeInput.value = '';
+  actualCostInput.value = '';
+  statusInput.value = '';
 }
 
-searchInput.addEventListener("input", () => {
-  const term = searchInput.value.toLowerCase();
-  const filtered = profitData.filter(item =>
-    Object.values(item).some(value => String(value).toLowerCase().includes(term))
+// Search functionality
+searchInput.addEventListener('input', () => {
+  const searchTerm = searchInput.value.toLowerCase();
+  const filteredData = profitData.filter((item) => 
+    item.jobNo.toLowerCase().includes(searchTerm) || 
+    item.customer.toLowerCase().includes(searchTerm)
   );
-  renderProfitTable(filtered);
-  updateChart(filtered);
-  updateSummary(filtered);
+  renderFilteredTable(filteredData);
 });
 
-exportBtn.addEventListener("click", () => {
-  const ws = XLSX.utils.json_to_sheet(profitData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Profit");
-  XLSX.writeFile(wb, "profit-report.xlsx");
-});
+// Render the filtered table based on search
+function renderFilteredTable(data) {
+  profitBody.innerHTML = '';
+  data.forEach((item, index) => {
+    const profit = item.charge - item.actualCost;
+    const margin = ((profit / item.charge) * 100).toFixed(2);
 
-let chartInstance = null;
+    profitBody.innerHTML += `
+      <tr>
+        <td class="p-2 border">${item.jobNo}</td>
+        <td class="p-2 border">${item.customer}</td>
+        <td class="p-2 border">${item.shipment}</td>
+        <td class="p-2 border">${item.charge}</td>
+        <td class="p-2 border">${item.actualCost}</td>
+        <td class="p-2 border">${profit.toFixed(2)}</td>
+        <td class="p-2 border">${margin}%</td>
+        <td class="p-2 border">${item.status}</td>
+        <td class="p-2 border">
+          <button onclick="editRecord(${index})" class="text-blue-600">Edit</button>
+          <button onclick="deleteRecord(${index})" class="text-red-600">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+  renderProfitChart();
+}
 
-function updateChart(data) {
-  const labels = data.map(d => d.jobNo + " (" + d.customer + ")");
-  const profits = data.map(d => d.profit);
+// Chart.js to render profit by customer/job
+function renderProfitChart() {
+  const labels = profitData.map(item => item.jobNo);
+  const data = profitData.map(item => item.charge - item.actualCost);
 
-  if (chartInstance) chartInstance.destroy();
+  const chartData = {
+    labels: labels,
+    datasets: [{
+      label: 'Profit by Job No',
+      data: data,
+      backgroundColor: '#4CAF50',
+      borderColor: '#388E3C',
+      borderWidth: 1,
+      hoverBackgroundColor: '#66BB6A',
+      hoverBorderColor: '#388E3C'
+    }]
+  };
 
-  chartInstance = new Chart(profitChart, {
+  new Chart(profitChartCanvas, {
     type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Profit by Job/Customer',
-        data: profits,
-        backgroundColor: '#1d4ed8'
-      }]
-    },
+    data: chartData,
     options: {
       responsive: true,
-      plugins: {
-        legend: { display: false }
+      scales: {
+        y: { 
+          beginAtZero: true 
+        }
       }
     }
   });
 }
 
-function updateSummary(data) {
-  document.getElementById("totalJobs").textContent = data.length;
-  const totalProfit = data.reduce((sum, item) => sum + item.profit, 0);
-  document.getElementById("totalProfit").textContent = totalProfit.toFixed(2);
-  const avgMargin = data.length ? (data.reduce((sum, item) => sum + parseFloat(item.margin), 0) / data.length).toFixed(2) : 0;
-  document.getElementById("avgMargin").textContent = avgMargin + "%";
+// Export to Excel using SheetJS
+function exportToExcel() {
+  const ws = XLSX.utils.json_to_sheet(profitData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Profit Data');
+  XLSX.writeFile(wb, 'profit_data.xlsx');
 }
 
-// Initial render
-renderProfitTable(profitData);
-updateChart(profitData);
-updateSummary(profitData);
+// Initialize by rendering the table and chart
+renderProfitTable();
