@@ -1,182 +1,69 @@
-// Get DOM elements
-const profitForm = document.getElementById('profitForm');
-const jobNoInput = document.getElementById('jobNo');
-const customerInput = document.getElementById('customer');
-const shipmentInput = document.getElementById('shipment');
-const chargeInput = document.getElementById('charge');
-const actualCostInput = document.getElementById('actualCost');
-const statusInput = document.getElementById('status');
-const profitBody = document.getElementById('profitBody');
-const searchInput = document.getElementById('searchInput');
-const profitChartCanvas = document.getElementById('profitChart');
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-// Initialize an empty array for profit records
-let profitData = JSON.parse(localStorage.getItem('profitData')) || [];
+const firebaseConfig = {
+  apiKey: "AIzaSyCL-y1VserUCDqL3plKcXwDe0E7-_dH43o",
+  authDomain: "sw-customer-tracker.firebaseapp.com",
+  projectId: "sw-customer-tracker",
+  storageBucket: "sw-customer-tracker.firebasestorage.app",
+  messagingSenderId: "665099220770",
+  appId: "1:665099220770:web:e8d7a04cce7e2a2d65d77b",
+  measurementId: "G-KJDNWXT8EC"
+};
 
-// Render the profit table and chart
-function renderProfitTable() {
-  profitBody.innerHTML = '';
-  profitData.forEach((item, index) => {
-    const profit = item.charge - item.actualCost;
-    const margin = ((profit / item.charge) * 100).toFixed(2);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
 
-    profitBody.innerHTML += `
-      <tr>
-        <td class="p-2 border">${item.jobNo}</td>
-        <td class="p-2 border">${item.customer}</td>
-        <td class="p-2 border">${item.shipment}</td>
-        <td class="p-2 border">${item.charge}</td>
-        <td class="p-2 border">${item.actualCost}</td>
-        <td class="p-2 border">${profit.toFixed(2)}</td>
-        <td class="p-2 border">${margin}%</td>
-        <td class="p-2 border">${item.status}</td>
-        <td class="p-2 border">
-          <button onclick="editRecord(${index})" class="text-blue-600">Edit</button>
-          <button onclick="deleteRecord(${index})" class="text-red-600">Delete</button>
-        </td>
-      </tr>
-    `;
-  });
-  renderProfitChart();
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const roleInput = document.getElementById("role");
+
+const authSection = document.getElementById("authSection");
+const appSection = document.getElementById("appSection");
+const userEmail = document.getElementById("userEmail");
+
+async function signup() {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+  const role = roleInput.value;
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, "users", userCredential.user.uid), { email, role });
+    alert("Sign up successful!");
+  } catch (error) {
+    alert(error.message);
+  }
 }
 
-// Handle Add/Edit form submission
-profitForm.addEventListener('submit', (event) => {
-  event.preventDefault();
+async function login() {
+  const email = emailInput.value;
+  const password = passwordInput.value;
 
-  const jobNo = jobNoInput.value.trim();
-  const customer = customerInput.value.trim();
-  const shipment = shipmentInput.value.trim();
-  const charge = parseFloat(chargeInput.value.trim());
-  const actualCost = parseFloat(actualCostInput.value.trim());
-  const status = statusInput.value.trim();
-
-  if (!jobNo || !customer || !charge || !actualCost) {
-    alert('Please fill in all required fields.');
-    return;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    alert("Login successful!");
+  } catch (error) {
+    alert(error.message);
   }
+}
 
-  const newRecord = { jobNo, customer, shipment, charge, actualCost, status };
+async function logout() {
+  await signOut(auth);
+}
 
-  // Add to existing data or edit existing record
-  const recordIndex = profitData.findIndex((item) => item.jobNo === jobNo);
-  if (recordIndex !== -1) {
-    profitData[recordIndex] = newRecord;  // Edit record
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    authSection.style.display = "none";
+    appSection.style.display = "block";
+    userEmail.textContent = user.email;
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const userData = userDoc.data();
+    console.log("Logged in as:", userData.role);
   } else {
-    profitData.push(newRecord);  // Add new record
+    authSection.style.display = "block";
+    appSection.style.display = "none";
   }
-
-  localStorage.setItem('profitData', JSON.stringify(profitData));
-  clearForm();
-  renderProfitTable();
 });
-
-// Edit record function
-function editRecord(index) {
-  const record = profitData[index];
-  jobNoInput.value = record.jobNo;
-  customerInput.value = record.customer;
-  shipmentInput.value = record.shipment;
-  chargeInput.value = record.charge;
-  actualCostInput.value = record.actualCost;
-  statusInput.value = record.status;
-}
-
-// Delete record function
-function deleteRecord(index) {
-  if (confirm('Are you sure you want to delete this record?')) {
-    profitData.splice(index, 1);
-    localStorage.setItem('profitData', JSON.stringify(profitData));
-    renderProfitTable();
-  }
-}
-
-// Clear the form after submitting
-function clearForm() {
-  jobNoInput.value = '';
-  customerInput.value = '';
-  shipmentInput.value = '';
-  chargeInput.value = '';
-  actualCostInput.value = '';
-  statusInput.value = '';
-}
-
-// Search functionality
-searchInput.addEventListener('input', () => {
-  const searchTerm = searchInput.value.toLowerCase();
-  const filteredData = profitData.filter((item) => 
-    item.jobNo.toLowerCase().includes(searchTerm) || 
-    item.customer.toLowerCase().includes(searchTerm)
-  );
-  renderFilteredTable(filteredData);
-});
-
-// Render the filtered table based on search
-function renderFilteredTable(data) {
-  profitBody.innerHTML = '';
-  data.forEach((item, index) => {
-    const profit = item.charge - item.actualCost;
-    const margin = ((profit / item.charge) * 100).toFixed(2);
-
-    profitBody.innerHTML += `
-      <tr>
-        <td class="p-2 border">${item.jobNo}</td>
-        <td class="p-2 border">${item.customer}</td>
-        <td class="p-2 border">${item.shipment}</td>
-        <td class="p-2 border">${item.charge}</td>
-        <td class="p-2 border">${item.actualCost}</td>
-        <td class="p-2 border">${profit.toFixed(2)}</td>
-        <td class="p-2 border">${margin}%</td>
-        <td class="p-2 border">${item.status}</td>
-        <td class="p-2 border">
-          <button onclick="editRecord(${index})" class="text-blue-600">Edit</button>
-          <button onclick="deleteRecord(${index})" class="text-red-600">Delete</button>
-        </td>
-      </tr>
-    `;
-  });
-  renderProfitChart();
-}
-
-// Chart.js to render profit by customer/job
-function renderProfitChart() {
-  const labels = profitData.map(item => item.jobNo);
-  const data = profitData.map(item => item.charge - item.actualCost);
-
-  const chartData = {
-    labels: labels,
-    datasets: [{
-      label: 'Profit by Job No',
-      data: data,
-      backgroundColor: '#4CAF50',
-      borderColor: '#388E3C',
-      borderWidth: 1,
-      hoverBackgroundColor: '#66BB6A',
-      hoverBorderColor: '#388E3C'
-    }]
-  };
-
-  new Chart(profitChartCanvas, {
-    type: 'bar',
-    data: chartData,
-    options: {
-      responsive: true,
-      scales: {
-        y: { 
-          beginAtZero: true 
-        }
-      }
-    }
-  });
-}
-
-// Export to Excel using SheetJS
-function exportToExcel() {
-  const ws = XLSX.utils.json_to_sheet(profitData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Profit Data');
-  XLSX.writeFile(wb, 'profit_data.xlsx');
-}
-
-// Initialize by rendering the table and chart
-renderProfitTable();
