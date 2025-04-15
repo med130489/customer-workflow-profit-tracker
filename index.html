@@ -1,14 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Customer Profit Tracker</title>
-  <link href="style.css" rel="stylesheet">
+  <title>Login System</title>
 </head>
-<body class="bg-white text-black dark:bg-gray-900 dark:text-white">
+<body>
   <div id="authSection">
-    <h2>Login / Sign Up</h2>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
     <select id="role">
@@ -18,16 +14,10 @@
     <button onclick="signup()">Sign Up</button>
     <button onclick="login()">Login</button>
   </div>
-
   <div id="appSection" style="display:none;">
-    <h2>Welcome, <span id="userEmail"></span>!</h2>
+    <p>Welcome, <span id="userEmail"></span>!</p>
     <button onclick="logout()">Logout</button>
-    <div id="profitContainer">
-      <table id="profitTable"></table>
-      <canvas id="profitChart" width="400" height="200"></canvas>
-    </div>
   </div>
-
-  <script type="module" src="script.js"></script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>

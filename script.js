@@ -67,3 +67,7 @@ onAuthStateChanged(auth, async (user) => {
     appSection.style.display = "none";
   }
 });
+
+window.signup = signup;
+window.login = login;
+window.logout = logout;
