@@ -3,31 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Customer Tracker</title>
+  <title>Profit Tracker</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <!-- 🔐 Login/Signup Section -->
-  <div id="authSection" class="auth-box">
-    <h2>Login / Signup</h2>
+  <div id="authSection">
+    <h2>Login or Signup</h2>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
-    <button onclick="signup()">Sign Up</button>
+    <button onclick="signup()">Signup</button>
     <button onclick="login()">Login</button>
   </div>
 
-  <!-- ✅ Main App Section -->
-  <div id="appSection" class="app-box" style="display:none;">
-    <div class="top-bar">
-      <span>Logged in as: <strong id="userEmail"></strong></span>
-      <button onclick="logout()">Logout</button>
-    </div>
+  <div id="appSection" style="display:none;">
     <h2>📊 Profit Tracker Dashboard</h2>
-    <!-- You can add your tracker UI here -->
-    <p>Start building your dashboard...</p>
+    <p>Welcome, <span id="userEmail"></span>!</p>
+    <button onclick="logout()">Logout</button>
+
+    <form id="profitForm">
+      <input type="text" id="jobNo" placeholder="Job No" required />
+      <input type="text" id="customer" placeholder="Customer" required />
+      <input type="text" id="shipment" placeholder="Shipment Type" required />
+      <input type="number" id="charge" placeholder="Charge" required />
+      <input type="number" id="actualCost" placeholder="Actual Cost" required />
+      <select id="status">
+        <option value="Pending">Pending</option>
+        <option value="Completed">Completed</option>
+      </select>
+      <button type="submit">Add</button>
+    </form>
+
+    <table id="profitTable">
+      <thead>
+        <tr>
+          <th>Job No</th>
+          <th>Customer</th>
+          <th>Shipment</th>
+          <th>Charge</th>
+          <th>Cost</th>
+          <th>Profit</th>
+          <th>Margin %</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="profitBody"></tbody>
+    </table>
+
+    <canvas id="profitChart"></canvas>
   </div>
 
-  <!-- 🔗 Script -->
   <script type="module" src="script.js"></script>
 </body>
 </html>

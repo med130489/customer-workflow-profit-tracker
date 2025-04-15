@@ -7,7 +7,6 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCL-y1VserUCDqL3plKcXwDe0E7-_dH43o",
   authDomain: "sw-customer-tracker.firebaseapp.com",
@@ -18,31 +17,28 @@ const firebaseConfig = {
   measurementId: "G-KJDNWXT8EC"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Auth Functions
 function signup() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   createUserWithEmailAndPassword(auth, email, password)
-    .then(() => alert("User signed up!"))
-    .catch((error) => alert(error.message));
+    .then(() => alert("Signed up!"))
+    .catch((err) => alert(err.message));
 }
 
 function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   signInWithEmailAndPassword(auth, email, password)
-    .catch((error) => alert(error.message));
+    .catch((err) => alert(err.message));
 }
 
 function logout() {
   signOut(auth).then(() => alert("Logged out"));
 }
 
-// Auth State Listener
 onAuthStateChanged(auth, (user) => {
   if (user) {
     document.getElementById("authSection").style.display = "none";
@@ -56,12 +52,10 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Make functions global
 window.signup = signup;
 window.login = login;
 window.logout = logout;
 
-// Profit Tracker Logic
 let profitData = JSON.parse(localStorage.getItem("profitData")) || [];
 
 document.getElementById("profitForm").addEventListener("submit", function (e) {
@@ -103,15 +97,12 @@ function renderTable() {
   });
 }
 
-// Chart.js
 let chart;
 function renderChart() {
   const ctx = document.getElementById("profitChart").getContext("2d");
   const customers = {};
   profitData.forEach((item) => {
-    if (!customers[item.customer]) {
-      customers[item.customer] = 0;
-    }
+    if (!customers[item.customer]) customers[item.customer] = 0;
     customers[item.customer] += item.profit;
   });
 
