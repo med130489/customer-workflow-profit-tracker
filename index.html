@@ -1,25 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login System</title>
-  <link rel="stylesheet" href="./style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Customer Tracker</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="authSection">
+  <!-- 🔐 Login/Signup Section -->
+  <div id="authSection" class="auth-box">
     <h2>Login / Signup</h2>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
-    <select id="role">
-      <option value="User">User</option>
-      <option value="Manager">Manager</option>
-    </select>
     <button onclick="signup()">Sign Up</button>
     <button onclick="login()">Login</button>
   </div>
-  <div id="appSection" style="display:none;">
-    <p>Welcome, <span id="userEmail"></span>!</p>
-    <button onclick="logout()">Logout</button>
+
+  <!-- ✅ Main App Section -->
+  <div id="appSection" class="app-box" style="display:none;">
+    <div class="top-bar">
+      <span>Logged in as: <strong id="userEmail"></strong></span>
+      <button onclick="logout()">Logout</button>
+    </div>
+    <h2>📊 Profit Tracker Dashboard</h2>
+    <!-- You can add your tracker UI here -->
+    <p>Start building your dashboard...</p>
   </div>
-  <script type="module" src="./script.js"></script>
+
+  <!-- 🔗 Script -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
