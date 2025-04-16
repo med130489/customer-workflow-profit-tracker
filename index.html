@@ -2,65 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login - Profit Tracker</title>
-  <link rel="stylesheet" href="style.css">
+  <link href="style.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 font-sans">
-  <div class="flex items-center justify-center h-screen">
-    <div class="bg-white p-6 rounded shadow-lg w-full max-w-sm">
-      <h1 class="text-2xl font-bold mb-4 text-center">📊 Profit Tracker</h1>
-      <input id="email" type="email" placeholder="Email" class="w-full p-2 border mb-2 rounded" />
-      <input id="password" type="password" placeholder="Password" class="w-full p-2 border mb-4 rounded" />
-      <button onclick="login()" class="w-full bg-blue-600 text-white p-2 rounded mb-2 hover:bg-blue-700">
-        Login
-      </button>
-      <p class="text-center text-sm text-gray-600">Don’t have an account? <a href="#" onclick="signup()" class="text-blue-600 underline">Sign Up</a></p>
+<body class="bg-gray-100 text-gray-900">
+  <div class="min-h-screen flex flex-col items-center justify-center">
+    <div class="w-full max-w-md bg-white p-8 rounded shadow">
+      <h2 class="text-2xl font-bold mb-4">Login / Signup</h2>
+      <input type="email" id="email" placeholder="Email" class="input mb-2 w-full">
+      <input type="password" id="password" placeholder="Password" class="input mb-4 w-full">
+      <div class="flex justify-between">
+        <button onclick="login()" class="btn bg-blue-600 text-white px-4 py-2 rounded">Login</button>
+        <button onclick="signup()" class="btn bg-green-600 text-white px-4 py-2 rounded">Signup</button>
+      </div>
     </div>
   </div>
-
-  <div id="toast" class="hidden fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg z-50 text-white"></div>
-
-  <script type="module" src="script.js"></script>
-</body>
-</html>
-
-  <div id="dashboard-section" class="hidden">
-    <h1>📊 Profit Tracker Dashboard</h1>
-    <button onclick="logout()">Logout</button>
-    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
-    <div id="toast" class="toast hidden"></div>
-
-    <form id="profit-form">
-      <input type="text" placeholder="Job No" id="jobNo" required />
-      <input type="text" placeholder="Customer" id="customer" required />
-      <input type="text" placeholder="Shipment Type" id="shipment" required />
-      <input type="number" placeholder="Charge" id="charge" required />
-      <input type="number" placeholder="Actual Cost" id="actualCost" required />
-      <input type="text" placeholder="Status" id="status" required />
-      <button type="submit">Add Record</button>
-    </form>
-
-    <canvas id="profitChart" height="100"></canvas>
-    <table>
-      <thead>
-        <tr>
-          <th onclick="sortTable('jobNo')">Job No</th>
-          <th onclick="sortTable('customer')">Customer</th>
-          <th>Shipment</th>
-          <th>Charge</th>
-          <th>Cost</th>
-          <th>Profit</th>
-          <th>Margin</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="profitBody"></tbody>
-    </table>
-    <button onclick="exportToExcel()">Export to Excel</button>
-  </div>
-
+  <div id="toast" class="toast hidden"></div>
   <script type="module" src="script.js"></script>
 </body>
 </html>
