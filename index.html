@@ -3,19 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📊 Profit Tracker Dashboard</title>
-  <link href="style.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+  <title>Login - Profit Tracker</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="light">
-  <div id="auth-section">
-    <h2>Login / Signup</h2>
-    <input type="email" id="loginEmail" placeholder="Email" />
-    <input type="password" id="loginPassword" placeholder="Password" />
-    <button onclick="signup()">Signup</button>
-    <button onclick="login()">Login</button>
+<body class="bg-gray-100 font-sans">
+  <div class="flex items-center justify-center h-screen">
+    <div class="bg-white p-6 rounded shadow-lg w-full max-w-sm">
+      <h1 class="text-2xl font-bold mb-4 text-center">📊 Profit Tracker</h1>
+      <input id="email" type="email" placeholder="Email" class="w-full p-2 border mb-2 rounded" />
+      <input id="password" type="password" placeholder="Password" class="w-full p-2 border mb-4 rounded" />
+      <button onclick="login()" class="w-full bg-blue-600 text-white p-2 rounded mb-2 hover:bg-blue-700">
+        Login
+      </button>
+      <p class="text-center text-sm text-gray-600">Don’t have an account? <a href="#" onclick="signup()" class="text-blue-600 underline">Sign Up</a></p>
+    </div>
   </div>
+
+  <div id="toast" class="hidden fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg z-50 text-white"></div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
 
   <div id="dashboard-section" class="hidden">
     <h1>📊 Profit Tracker Dashboard</h1>
