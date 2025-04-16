@@ -1,20 +1,22 @@
+
 body {
-  font-family: system-ui, sans-serif;
+  font-family: sans-serif;
 }
+
 .input {
-  width: 100%;
-  padding: 0.5rem;
+  padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 0.25rem;
+  border-radius: 4px;
+  width: 100%;
 }
+
 .btn {
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
+
 .toast {
   transition: opacity 0.3s ease;
-}
-.hidden {
-  display: none;
 }
