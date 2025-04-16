@@ -1,53 +1,19 @@
 let profitData = JSON.parse(localStorage.getItem("profitData")) || [];
-
-const authSection = document.getElementById("auth-section");
-const dashboardSection = document.getElementById("dashboard-section");
+let editIndex = -1;
+const profitForm = document.getElementById("profit-form");
+const profitBody = document.getElementById("profitBody");
 const toast = document.getElementById("toast");
+const chartCtx = document.getElementById("profitChart").getContext("2d");
 
-// Fake auth for now
-function login() {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-  if (email && password) {
-    localStorage.setItem("loggedIn", "true");
-    showDashboard();
-    showToast("Logged in successfully!");
-  } else {
-    showToast("Please enter email and password", false);
-  }
-}
-
-function signup() {
-  const email = document.getElementById("signupEmail").value;
-  const password = document.getElementById("signupPassword").value;
-  if (email && password) {
-    showToast("Signed up successfully! You can now log in.");
-  } else {
-    showToast("Please enter email and password", false);
-  }
-}
-
-function logout() {
-  localStorage.removeItem("loggedIn");
-  location.reload();
-}
-
-function showDashboard() {
-  authSection.classList.add("hidden");
-  dashboardSection.classList.remove("hidden");
-  renderTable();
-  renderChart();
-}
-
-if (localStorage.getItem("loggedIn") === "true") {
-  showDashboard();
-}
-
-function showToast(msg, success = true) {
-  toast.textContent = msg;
-  toast.style.backgroundColor = success ? "green" : "red";
+function showToast(message, success = true) {
+  toast.textContent = message;
+  toast.className = `toast ${success ? "bg-green-600" : "bg-red-600"} text-white px-4 py-2 rounded`;
   toast.classList.remove("hidden");
   setTimeout(() => toast.classList.add("hidden"), 3000);
+}
+
+function saveData() {
+  localStorage.setItem("profitData", JSON.stringify(profitData));
 }
 
 function calculateProfit(item) {
@@ -56,72 +22,131 @@ function calculateProfit(item) {
   return { profit, margin };
 }
 
-document.getElementById("profit-form").addEventListener("submit", function (e) {
-  e.preventDefault();
-  const item = {
-    jobNo: document.getElementById("jobNo").value,
-    customer: document.getElementById("customer").value,
-    shipment: document.getElementById("shipment").value,
-    charge: parseFloat(document.getElementById("charge").value),
-    actualCost: parseFloat(document.getElementById("actualCost").value),
-    status: document.getElementById("status").value,
-  };
-
-  const { profit, margin } = calculateProfit(item);
-  item.profit = profit;
-  item.margin = margin;
-
-  profitData.push(item);
-  localStorage.setItem("profitData", JSON.stringify(profitData));
-  renderTable();
-  renderChart();
-  showToast("Record added!");
-  this.reset();
-});
-
 function renderTable() {
-  const tbody = document.getElementById("profitBody");
-  tbody.innerHTML = "";
-  profitData.forEach(item => {
-    tbody.innerHTML += `
+  profitBody.innerHTML = "";
+  profitData.forEach((item, index) => {
+    const { profit, margin } = calculateProfit(item);
+    profitBody.innerHTML += `
       <tr>
         <td>${item.jobNo}</td>
         <td>${item.customer}</td>
         <td>${item.shipment}</td>
         <td>${item.charge}</td>
         <td>${item.actualCost}</td>
-        <td>${item.profit}</td>
-        <td>${item.margin}</td>
+        <td>${profit}</td>
+        <td>${margin}%</td>
         <td>${item.status}</td>
+        <td>
+          <button onclick="editRecord(${index})">Edit</button>
+          <button onclick="deleteRecord(${index})">Delete</button>
+        </td>
       </tr>
     `;
   });
 }
 
-let chart;
 function renderChart() {
-  if (chart) chart.destroy();
-  const ctx = document.getElementById("profitChart").getContext("2d");
-  chart = new Chart(ctx, {
+  const labels = profitData.map(i => i.customer);
+  const profits = profitData.map(i => calculateProfit(i).profit);
+  new Chart(chartCtx, {
     type: "bar",
     data: {
-      labels: profitData.map(item => item.customer),
+      labels,
       datasets: [{
         label: "Profit",
-        data: profitData.map(item => item.profit),
-        backgroundColor: "#3b82f6"
+        data: profits,
+        backgroundColor: "navy"
       }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true }
-      }
     }
   });
 }
 
+profitForm.addEventListener("submit", e => {
+  e.preventDefault();
+  const item = {
+    jobNo: document.getElementById("jobNo").value,
+    customer: document.getElementById("customer").value,
+    shipment: document.getElementById("shipment").value,
+    charge: +document.getElementById("charge").value,
+    actualCost: +document.getElementById("actualCost").value,
+    status: document.getElementById("status").value
+  };
+  if (editIndex > -1) {
+    profitData[editIndex] = item;
+    editIndex = -1;
+    showToast("Record updated!");
+  } else {
+    profitData.push(item);
+    showToast("Record added!");
+  }
+  profitForm.reset();
+  saveData();
+  renderTable();
+  renderChart();
+});
+
+function editRecord(index) {
+  const item = profitData[index];
+  document.getElementById("jobNo").value = item.jobNo;
+  document.getElementById("customer").value = item.customer;
+  document.getElementById("shipment").value = item.shipment;
+  document.getElementById("charge").value = item.charge;
+  document.getElementById("actualCost").value = item.actualCost;
+  document.getElementById("status").value = item.status;
+  editIndex = index;
+}
+
+function deleteRecord(index) {
+  profitData.splice(index, 1);
+  saveData();
+  renderTable();
+  renderChart();
+  showToast("Record deleted!");
+}
+
 function exportToExcel() {
-  // You can integrate SheetJS here if needed later
-  alert("Excel export coming soon!");
+  const ws = XLSX.utils.json_to_sheet(profitData.map(i => {
+    const p = calculateProfit(i);
+    return { ...i, Profit: p.profit, Margin: p.margin + "%" };
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Profits");
+  XLSX.writeFile(wb, "ProfitData.xlsx");
+}
+
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+}
+
+function login() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  if (!email || !password) {
+    showToast("Enter both fields", false);
+    return;
+  }
+  localStorage.setItem("loggedIn", "true");
+  showDashboard();
+  showToast("Login successful!");
+}
+
+function signup() {
+  login(); // Simulate same as login
+}
+
+function logout() {
+  localStorage.removeItem("loggedIn");
+  location.reload();
+}
+
+function showDashboard() {
+  document.getElementById("auth-section").classList.add("hidden");
+  document.getElementById("dashboard-section").classList.remove("hidden");
+  renderTable();
+  renderChart();
+}
+
+// Auto login
+if (localStorage.getItem("loggedIn") === "true") {
+  showDashboard();
 }
