@@ -1,37 +1,53 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCL-y1VserUCDqL3plKcXwDe0E7-_dH43o",
-  authDomain: "sw-customer-tracker.firebaseapp.com",
-  projectId: "sw-customer-tracker",
-  storageBucket: "sw-customer-tracker.appspot.com",
-  messagingSenderId: "665099220770",
-  appId: "1:665099220770:web:e8d7a04cce7e2a2d65d77b",
-  measurementId: "G-KJDNWXT8EC"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-const profitForm = document.getElementById("profit-form");
-const profitBody = document.getElementById("profitBody");
-const profitChartCanvas = document.getElementById("profitChart");
-const toast = document.getElementById("toast");
-
 let profitData = JSON.parse(localStorage.getItem("profitData")) || [];
 
-let chart;
+const authSection = document.getElementById("auth-section");
+const dashboardSection = document.getElementById("dashboard-section");
+const toast = document.getElementById("toast");
 
-function showToast(message, success = true) {
-  toast.textContent = message;
-  toast.className = `toast ${success ? "bg-green-600" : "bg-red-600"}`;
-  toast.classList.remove("hidden");
-  setTimeout(() => toast.classList.add("hidden"), 3000);
+// Fake auth for now
+function login() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  if (email && password) {
+    localStorage.setItem("loggedIn", "true");
+    showDashboard();
+    showToast("Logged in successfully!");
+  } else {
+    showToast("Please enter email and password", false);
+  }
 }
 
-function saveData() {
-  localStorage.setItem("profitData", JSON.stringify(profitData));
+function signup() {
+  const email = document.getElementById("signupEmail").value;
+  const password = document.getElementById("signupPassword").value;
+  if (email && password) {
+    showToast("Signed up successfully! You can now log in.");
+  } else {
+    showToast("Please enter email and password", false);
+  }
+}
+
+function logout() {
+  localStorage.removeItem("loggedIn");
+  location.reload();
+}
+
+function showDashboard() {
+  authSection.classList.add("hidden");
+  dashboardSection.classList.remove("hidden");
+  renderTable();
+  renderChart();
+}
+
+if (localStorage.getItem("loggedIn") === "true") {
+  showDashboard();
+}
+
+function showToast(msg, success = true) {
+  toast.textContent = msg;
+  toast.style.backgroundColor = success ? "green" : "red";
+  toast.classList.remove("hidden");
+  setTimeout(() => toast.classList.add("hidden"), 3000);
 }
 
 function calculateProfit(item) {
@@ -40,116 +56,72 @@ function calculateProfit(item) {
   return { profit, margin };
 }
 
-function renderProfitTable(data) {
-  profitBody.innerHTML = "";
-  data.forEach((item, index) => {
-    const { profit, margin } = calculateProfit(item);
-    profitBody.innerHTML += `
+document.getElementById("profit-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  const item = {
+    jobNo: document.getElementById("jobNo").value,
+    customer: document.getElementById("customer").value,
+    shipment: document.getElementById("shipment").value,
+    charge: parseFloat(document.getElementById("charge").value),
+    actualCost: parseFloat(document.getElementById("actualCost").value),
+    status: document.getElementById("status").value,
+  };
+
+  const { profit, margin } = calculateProfit(item);
+  item.profit = profit;
+  item.margin = margin;
+
+  profitData.push(item);
+  localStorage.setItem("profitData", JSON.stringify(profitData));
+  renderTable();
+  renderChart();
+  showToast("Record added!");
+  this.reset();
+});
+
+function renderTable() {
+  const tbody = document.getElementById("profitBody");
+  tbody.innerHTML = "";
+  profitData.forEach(item => {
+    tbody.innerHTML += `
       <tr>
-        <td class="p-2">${item.jobNo}</td>
-        <td class="p-2">${item.customer}</td>
-        <td class="p-2">${item.shipment}</td>
-        <td class="p-2">${item.charge}</td>
-        <td class="p-2">${item.actualCost}</td>
-        <td class="p-2">${profit}</td>
-        <td class="p-2">${margin}%</td>
-        <td class="p-2">${item.status}</td>
-        <td class="p-2">
-          <button onclick="deleteRecord(${index})" class="text-red-600">Delete</button>
-        </td>
+        <td>${item.jobNo}</td>
+        <td>${item.customer}</td>
+        <td>${item.shipment}</td>
+        <td>${item.charge}</td>
+        <td>${item.actualCost}</td>
+        <td>${item.profit}</td>
+        <td>${item.margin}</td>
+        <td>${item.status}</td>
       </tr>
     `;
   });
 }
 
+let chart;
 function renderChart() {
-  const customerProfits = {};
-  profitData.forEach((item) => {
-    const profit = item.charge - item.actualCost;
-    customerProfits[item.customer] = (customerProfits[item.customer] || 0) + profit;
-  });
-
-  const labels = Object.keys(customerProfits);
-  const data = Object.values(customerProfits);
-
   if (chart) chart.destroy();
-  chart = new Chart(profitChartCanvas, {
+  const ctx = document.getElementById("profitChart").getContext("2d");
+  chart = new Chart(ctx, {
     type: "bar",
     data: {
-      labels,
+      labels: profitData.map(item => item.customer),
       datasets: [{
         label: "Profit",
-        data,
+        data: profitData.map(item => item.profit),
         backgroundColor: "#3b82f6"
       }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
     }
   });
 }
 
-window.deleteRecord = function (index) {
-  profitData.splice(index, 1);
-  saveData();
-  renderProfitTable(profitData);
-  renderChart();
-  showToast("Record deleted");
-};
-
-profitForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const newItem = {
-    jobNo: profitForm.jobNo.value,
-    customer: profitForm.customer.value,
-    shipment: profitForm.shipment.value,
-    charge: parseFloat(profitForm.charge.value),
-    actualCost: parseFloat(profitForm.actualCost.value),
-    status: profitForm.status.value,
-  };
-  profitData.push(newItem);
-  saveData();
-  profitForm.reset();
-  renderProfitTable(profitData);
-  renderChart();
-  showToast("Record added");
-});
-
-window.exportToExcel = function () {
-  const ws = XLSX.utils.json_to_sheet(profitData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Profits");
-  XLSX.writeFile(wb, "Profit_Report.xlsx");
-};
-
-window.toggleDarkMode = function () {
-  document.body.classList.toggle("dark");
-};
-
-window.signup = function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(() => showDashboard())
-    .catch((err) => showToast(err.message, false));
-};
-
-window.login = function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => showDashboard())
-    .catch((err) => showToast(err.message, false));
-};
-
-window.logout = function () {
-  signOut(auth).then(() => {
-    document.getElementById("dashboard").classList.add("hidden");
-    document.getElementById("auth-section").classList.remove("hidden");
-    showToast("Logged out");
-  });
-};
-
-function showDashboard() {
-  document.getElementById("dashboard").classList.remove("hidden");
-  document.getElementById("auth-section").classList.add("hidden");
-  renderProfitTable(profitData);
-  renderChart();
+function exportToExcel() {
+  // You can integrate SheetJS here if needed later
+  alert("Excel export coming soon!");
 }

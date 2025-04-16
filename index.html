@@ -2,66 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Profit Tracker Dashboard</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <div id="auth-section" class="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
-    <h2 class="text-xl font-semibold mb-4">Login / Signup</h2>
-    <input type="email" id="email" placeholder="Email" class="input mb-2" />
-    <input type="password" id="password" placeholder="Password" class="input mb-4" />
-    <button onclick="signup()" class="btn bg-green-600">Sign Up</button>
-    <button onclick="login()" class="btn bg-blue-600 ml-2">Login</button>
+<body>
+
+  <!-- 🔐 Login / Signup Section -->
+  <div id="auth-section">
+    <h2>Login</h2>
+    <input type="email" id="loginEmail" placeholder="Email" />
+    <input type="password" id="loginPassword" placeholder="Password" />
+    <button onclick="login()">Login</button>
+
+    <h2>Signup</h2>
+    <input type="email" id="signupEmail" placeholder="Email" />
+    <input type="password" id="signupPassword" placeholder="Password" />
+    <button onclick="signup()">Signup</button>
   </div>
 
-  <div id="dashboard" class="hidden p-6 max-w-6xl mx-auto">
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">📊 Profit Tracker Dashboard</h1>
-      <div class="space-x-2">
-        <button onclick="toggleDarkMode()" class="btn bg-gray-800 text-white">Toggle Dark Mode</button>
-        <button onclick="logout()" class="btn bg-red-600">Logout</button>
-      </div>
-    </div>
+  <!-- 📊 Dashboard Section -->
+  <div id="dashboard-section" class="hidden">
+    <h1>📊 Profit Tracker Dashboard</h1>
 
-    <form id="profit-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <input type="text" id="jobNo" placeholder="Job No" class="input" required />
-      <input type="text" id="customer" placeholder="Customer" class="input" required />
-      <input type="text" id="shipment" placeholder="Shipment Type" class="input" />
-      <input type="number" id="charge" placeholder="Charge" class="input" required />
-      <input type="number" id="actualCost" placeholder="Actual Cost" class="input" required />
-      <input type="text" id="status" placeholder="Status" class="input" />
-      <button type="submit" class="btn bg-blue-600 col-span-full">Add Record</button>
+    <!-- Form to add profit -->
+    <form id="profit-form">
+      <input type="text" id="jobNo" placeholder="Job No" required />
+      <input type="text" id="customer" placeholder="Customer" required />
+      <input type="text" id="shipment" placeholder="Shipment" required />
+      <input type="number" id="charge" placeholder="Charge" required />
+      <input type="number" id="actualCost" placeholder="Actual Cost" required />
+      <input type="text" id="status" placeholder="Status" required />
+      <button type="submit">Add Record</button>
     </form>
 
-    <div class="overflow-auto mb-6">
-      <table class="w-full text-sm text-left bg-white shadow rounded">
-        <thead class="bg-blue-100">
-          <tr>
-            <th class="p-2">Job No</th>
-            <th class="p-2">Customer</th>
-            <th class="p-2">Shipment</th>
-            <th class="p-2">Charge</th>
-            <th class="p-2">Actual Cost</th>
-            <th class="p-2">Profit</th>
-            <th class="p-2">Margin %</th>
-            <th class="p-2">Status</th>
-            <th class="p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="profitBody"></tbody>
-      </table>
-    </div>
+    <!-- Table of records -->
+    <table>
+      <thead>
+        <tr>
+          <th>Job No</th>
+          <th>Customer</th>
+          <th>Shipment</th>
+          <th>Charge</th>
+          <th>Actual Cost</th>
+          <th>Profit</th>
+          <th>Margin %</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="profitBody"></tbody>
+    </table>
 
-    <canvas id="profitChart" height="100"></canvas>
-    <button onclick="exportToExcel()" class="btn bg-green-600 mt-6">Export to Excel</button>
+    <!-- Chart -->
+    <canvas id="profitChart" width="600" height="300"></canvas>
+
+    <button onclick="exportToExcel()">Export to Excel</button>
+    <button onclick="logout()">Logout</button>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <div id="toast" class="hidden"></div>
 
-  <!-- Firebase SDK -->
-  <script type="module" src="script.js"></script>
+  <script src="script.js" type="module"></script>
 </body>
 </html>
