@@ -7,7 +7,7 @@ const toast = document.getElementById("toast");
 
 function showToast(message, success = true) {
   toast.textContent = message;
-  toast.className = \`toast fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg z-50 \${success ? "bg-green-600" : "bg-red-600"} text-white\`;
+  toast.className = `toast fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${success ? "bg-green-600" : "bg-red-600"} text-white`;
   toast.classList.remove("hidden");
   setTimeout(() => toast.classList.add("hidden"), 3000);
 }
