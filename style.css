@@ -1,22 +1,28 @@
-
-body {
-  font-family: sans-serif;
+body.dark {
+  background-color: #1e293b;
+  color: white;
 }
 
 .input {
   padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
   width: 100%;
 }
 
 .btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
 }
 
 .toast {
-  transition: opacity 0.3s ease;
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  color: white;
+  z-index: 50;
 }

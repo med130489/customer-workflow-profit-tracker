@@ -1,13 +1,31 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 
-let profitData = JSON.parse(localStorage.getItem("profitData")) || [];
+const firebaseConfig = {
+  apiKey: "AIzaSyCL-y1VserUCDqL3plKcXwDe0E7-_dH43o",
+  authDomain: "sw-customer-tracker.firebaseapp.com",
+  projectId: "sw-customer-tracker",
+  storageBucket: "sw-customer-tracker.appspot.com",
+  messagingSenderId: "665099220770",
+  appId: "1:665099220770:web:e8d7a04cce7e2a2d65d77b",
+  measurementId: "G-KJDNWXT8EC"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
 const profitForm = document.getElementById("profit-form");
 const profitBody = document.getElementById("profitBody");
-const profitChart = document.getElementById("profitChart").getContext("2d");
+const profitChartCanvas = document.getElementById("profitChart");
 const toast = document.getElementById("toast");
+
+let profitData = JSON.parse(localStorage.getItem("profitData")) || [];
+
+let chart;
 
 function showToast(message, success = true) {
   toast.textContent = message;
-  toast.className = `toast fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${success ? "bg-green-600" : "bg-red-600"} text-white`;
+  toast.className = `toast ${success ? "bg-green-600" : "bg-red-600"}`;
   toast.classList.remove("hidden");
   setTimeout(() => toast.classList.add("hidden"), 3000);
 }
@@ -22,93 +40,116 @@ function calculateProfit(item) {
   return { profit, margin };
 }
 
-function renderTable() {
+function renderProfitTable(data) {
   profitBody.innerHTML = "";
-  profitData.forEach((item, index) => {
+  data.forEach((item, index) => {
     const { profit, margin } = calculateProfit(item);
-    profitBody.innerHTML += \`
-      <tr class="border-b">
-        <td class="p-2">\${item.jobNo}</td>
-        <td class="p-2">\${item.customer}</td>
-        <td class="p-2">\${item.charge}</td>
-        <td class="p-2">\${item.actualCost}</td>
-        <td class="p-2">\${profit}</td>
-        <td class="p-2">\${margin}%</td>
-        <td class="p-2 space-x-2">
-          <button onclick="editRecord(\${index})" class="text-blue-600">Edit</button>
-          <button onclick="deleteRecord(\${index})" class="text-red-600">Delete</button>
+    profitBody.innerHTML += `
+      <tr>
+        <td class="p-2">${item.jobNo}</td>
+        <td class="p-2">${item.customer}</td>
+        <td class="p-2">${item.shipment}</td>
+        <td class="p-2">${item.charge}</td>
+        <td class="p-2">${item.actualCost}</td>
+        <td class="p-2">${profit}</td>
+        <td class="p-2">${margin}%</td>
+        <td class="p-2">${item.status}</td>
+        <td class="p-2">
+          <button onclick="deleteRecord(${index})" class="text-red-600">Delete</button>
         </td>
       </tr>
-    \`;
+    `;
   });
 }
 
 function renderChart() {
-  const labels = profitData.map(item => item.customer + " (" + item.jobNo + ")");
-  const data = profitData.map(item => item.charge - item.actualCost);
-  new Chart(profitChart, {
+  const customerProfits = {};
+  profitData.forEach((item) => {
+    const profit = item.charge - item.actualCost;
+    customerProfits[item.customer] = (customerProfits[item.customer] || 0) + profit;
+  });
+
+  const labels = Object.keys(customerProfits);
+  const data = Object.values(customerProfits);
+
+  if (chart) chart.destroy();
+  chart = new Chart(profitChartCanvas, {
     type: "bar",
     data: {
       labels,
       datasets: [{
         label: "Profit",
         data,
-        backgroundColor: "rgba(54, 162, 235, 0.6)"
+        backgroundColor: "#3b82f6"
       }]
     }
   });
 }
 
-profitForm.onsubmit = e => {
-  e.preventDefault();
-  const jobNo = document.getElementById("jobNo").value;
-  const customer = document.getElementById("customer").value;
-  const charge = parseFloat(document.getElementById("charge").value);
-  const actualCost = parseFloat(document.getElementById("actualCost").value);
-  if (!jobNo || !customer || isNaN(charge) || isNaN(actualCost)) return showToast("Please fill all fields", false);
-  profitData.push({ jobNo, customer, charge, actualCost });
-  saveData();
-  renderTable();
-  renderChart();
-  profitForm.reset();
-  showToast("Record added");
-};
-
-function editRecord(index) {
-  const item = profitData[index];
-  document.getElementById("jobNo").value = item.jobNo;
-  document.getElementById("customer").value = item.customer;
-  document.getElementById("charge").value = item.charge;
-  document.getElementById("actualCost").value = item.actualCost;
-  deleteRecord(index);
-}
-
-function deleteRecord(index) {
+window.deleteRecord = function (index) {
   profitData.splice(index, 1);
   saveData();
-  renderTable();
+  renderProfitTable(profitData);
   renderChart();
   showToast("Record deleted");
-}
+};
 
-document.getElementById("exportExcel").onclick = () => {
-  const ws = XLSX.utils.json_to_sheet(profitData.map(item => ({
-    "Job No": item.jobNo,
-    Customer: item.customer,
-    Charge: item.charge,
-    "Actual Cost": item.actualCost,
-    Profit: item.charge - item.actualCost,
-    Margin: item.charge ? ((item.charge - item.actualCost) / item.charge * 100).toFixed(2) + "%" : "0%"
-  })));
+profitForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const newItem = {
+    jobNo: profitForm.jobNo.value,
+    customer: profitForm.customer.value,
+    shipment: profitForm.shipment.value,
+    charge: parseFloat(profitForm.charge.value),
+    actualCost: parseFloat(profitForm.actualCost.value),
+    status: profitForm.status.value,
+  };
+  profitData.push(newItem);
+  saveData();
+  profitForm.reset();
+  renderProfitTable(profitData);
+  renderChart();
+  showToast("Record added");
+});
+
+window.exportToExcel = function () {
+  const ws = XLSX.utils.json_to_sheet(profitData);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Profit Data");
-  XLSX.writeFile(wb, "profit-data.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "Profits");
+  XLSX.writeFile(wb, "Profit_Report.xlsx");
 };
 
-document.getElementById("logout-btn").onclick = () => {
-  localStorage.clear();
-  window.location.href = "index.html";
+window.toggleDarkMode = function () {
+  document.body.classList.toggle("dark");
 };
 
-renderTable();
-renderChart();
+window.signup = function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(() => showDashboard())
+    .catch((err) => showToast(err.message, false));
+};
+
+window.login = function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => showDashboard())
+    .catch((err) => showToast(err.message, false));
+};
+
+window.logout = function () {
+  signOut(auth).then(() => {
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("auth-section").classList.remove("hidden");
+    showToast("Logged out");
+  });
+};
+
+function showDashboard() {
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("auth-section").classList.add("hidden");
+  renderProfitTable(profitData);
+  renderChart();
+}
